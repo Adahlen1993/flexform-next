@@ -8,16 +8,22 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String      @id @default(uuid())
+  email        String      @unique
+  username     String      @unique     // 👈 this must exist
+  password     String
+  firstName    String
+  lastName     String
+  dateOfBirth  DateTime
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
-  workouts  Workout[]
-  settings  UserSettings?
+  workouts     Workout[]
+  settings     UserSettings?
+  weightLogs   WeightLog[]
 }
+
+
 
 model UserSettings {
   id          String   @id @default(uuid())
@@ -27,6 +33,20 @@ model UserSettings {
 
   user        User     @relation(fields: [userId], references: [id])
 }
+
+model WeightLog {
+  id        String   @id @default(uuid())
+  userId    String
+  weight    Float
+  loggedAt  DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+
 
 model Workout {
   id        String   @id @default(uuid())
