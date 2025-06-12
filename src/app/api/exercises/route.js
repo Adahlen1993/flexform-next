@@ -8,16 +8,22 @@ export async function GET(req) {
   const user = verifyToken(token)
   if (!user) return new Response('Unauthorized', { status: 401 })
 
-  const exercises = await prisma.exercise.findMany()
-  const excluded = await prisma.userExcludedTag.findMany({
-    where: { userId: user.userId },
-    include: { tag: true },
-  })
+  try {
+    const exercises = await prisma.exercise.findMany()
 
-  const excludedIds = new Set(excluded.map((e) => e.tagId)) // or exerciseId if direct
+    const excluded = await prisma.userExcludedExercise.findMany({
+      where: { userId: user.userId },
+      select: { exerciseId: true },
+    })
 
-  return new Response(JSON.stringify({
-    exercises,
-    excludedIds: [...excludedIds],
-  }))
+    const excludedIds = excluded.map((e) => e.exerciseId)
+
+    return new Response(
+      JSON.stringify({ exercises, excludedIds }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    )
+  } catch (err) {
+    console.error('Error in /api/exercises:', err)
+    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 })
+  }
 }
