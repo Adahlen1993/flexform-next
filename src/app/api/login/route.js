@@ -25,14 +25,30 @@ export async function POST(req) {
 
     const token = signToken({ userId: user.id })
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: {
-        'Set-Cookie': `token=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=604800`
+    // Remove sensitive fields
+    const { password: _, ...safeUser } = user
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        token,
+        user: safeUser,
+      }),
+      {
+        status: 200,
+        headers: {
+          'Set-Cookie': `token=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=604800${
+            process.env.NODE_ENV === 'production' ? '; Secure' : ''
+          }`,
+          'Content-Type': 'application/json',
+        },
       }
-    })
+    )
   } catch (err) {
     console.error(err)
-    return new Response(JSON.stringify({ error: 'Login failed' }), { status: 500 })
+    return new Response(JSON.stringify({ error: 'Login failed' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    })
   }
 }

@@ -1,25 +1,29 @@
 import { NextResponse } from 'next/server'
-import { verifyToken } from '@/lib/auth'
 
-const PUBLIC_ROUTES = ['/login', '/register', '/favicon.ico', '/api/login', '/api/register']
+export const config = {
+  matcher: ['/((?!_next|api|favicon.ico|login|register).*)'],
+}
 
-export async function middleware(request) {
-  const { pathname } = request.nextUrl
-
-  // Allow public routes
-  if (PUBLIC_ROUTES.some((route) => pathname.startsWith(route))) {
-    return NextResponse.next()
+function decodeToken(token) {
+  try {
+    const payload = token.split('.')[1]
+    const decoded = JSON.parse(atob(payload))
+    return decoded
+  } catch (err) {
+    console.error('Token decode failed:', err)
+    return null
   }
+}
 
+export function middleware(request) {
   const token = request.cookies.get('token')?.value
+  console.log('Middleware token:', token)
 
-  if (!token) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
+  const user = token ? decodeToken(token) : null
+  const isExpired = user?.exp && Date.now() >= user.exp * 1000
 
-  const valid = verifyToken(token)
-
-  if (!valid) {
+  if (!user || isExpired) {
+    console.log('Invalid or expired token')
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
