@@ -8,24 +8,21 @@ datasource db {
 }
 
 model User {
-  id           String      @id @default(uuid())
-  email        String      @unique
-  username     String      @unique
-  password     String
-  firstName    String
-  lastName     String
-  dateOfBirth  DateTime
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  id                 String                @id @default(uuid())
+  email              String                @unique
+  username           String                @unique
+  password           String
+  firstName          String
+  lastName           String
+  dateOfBirth        DateTime
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
 
-  workouts     Workout[]
-  weightLogs   WeightLog[]
-  preferences  UserPreferences?
-  excludedTags UserExcludedTag[]
+  workouts           Workout[]
+  weightLogs         WeightLog[]
+  preferences        UserPreferences?
+  excludedExercises  UserExcludedExercise[]
 }
-
-
-
 
 model UserPreferences {
   id              String   @id @default(uuid())
@@ -42,7 +39,6 @@ model UserPreferences {
   user            User     @relation(fields: [userId], references: [id])
 }
 
-
 model WeightLog {
   id        String   @id @default(uuid())
   userId    String
@@ -50,21 +46,19 @@ model WeightLog {
   loggedAt  DateTime @default(now())
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now())
 
   user      User     @relation(fields: [userId], references: [id])
 }
 
-
-
 model Workout {
-  id        String   @id @default(uuid())
-  userId    String
-  date      DateTime
-  note      String?
+  id         String             @id @default(uuid())
+  userId     String
+  date       DateTime
+  note       String?
 
-  user      User     @relation(fields: [userId], references: [id])
-  exercises WorkoutExercise[]
+  user       User               @relation(fields: [userId], references: [id])
+  exercises  WorkoutExercise[]
 }
 
 model WorkoutExercise {
@@ -77,36 +71,48 @@ model WorkoutExercise {
 }
 
 model Set {
-  id              String   @id @default(uuid())
+  id                String   @id @default(uuid())
   workoutExerciseId String
-  reps            Int
-  weight          Float
+  reps              Int
+  weight            Float
 
-  exercise        WorkoutExercise @relation(fields: [workoutExerciseId], references: [id])
-}
-
-model ExerciseTag {
-  id        String   @id @default(uuid())
-  name      String   @unique
-
-  exercises Exercise[] @relation("TagOnExercise", references: [id])
-  excludedBy UserExcludedTag[]
-}
-
-
-model UserExcludedTag {
-  id     String   @id @default(uuid())
-  userId String
-  tagId  String
-
-  user   User        @relation(fields: [userId], references: [id])
-  tag    ExerciseTag @relation(fields: [tagId], references: [id])
-
-  @@unique([userId, tagId])
+  exercise          WorkoutExercise @relation(fields: [workoutExerciseId], references: [id])
 }
 
 model Exercise {
   id    String   @id @default(uuid())
   name  String   @unique
-  tags  ExerciseTag[]
+
+  exerciseTags ExerciseOnTag[]
+  excludedBy   UserExcludedExercise[]
+}
+
+
+model ExerciseTag {
+  id    String   @id @default(uuid())
+  name  String   @unique
+
+  tagExercises ExerciseOnTag[]
+}
+
+
+model ExerciseOnTag {
+  exerciseId String
+  tagId      String
+
+  exercise   Exercise   @relation(fields: [exerciseId], references: [id])
+  tag        ExerciseTag @relation(fields: [tagId], references: [id])
+
+  @@id([exerciseId, tagId])
+}
+
+model UserExcludedExercise {
+  id         String   @id @default(uuid())
+  userId     String
+  exerciseId String
+
+  user       User     @relation(fields: [userId], references: [id])
+  exercise   Exercise @relation(fields: [exerciseId], references: [id])
+
+  @@unique([userId, exerciseId])
 }
