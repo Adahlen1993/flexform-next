@@ -10,7 +10,7 @@ datasource db {
 model User {
   id           String      @id @default(uuid())
   email        String      @unique
-  username     String      @unique     // 👈 this must exist
+  username     String      @unique
   password     String
   firstName    String
   lastName     String
@@ -19,20 +19,29 @@ model User {
   updatedAt    DateTime    @updatedAt
 
   workouts     Workout[]
-  settings     UserSettings?
   weightLogs   WeightLog[]
+  preferences  UserPreferences?
+  excludedTags UserExcludedTag[]
 }
 
 
 
-model UserSettings {
-  id          String   @id @default(uuid())
-  userId      String   @unique
-  weightUnit  String   // "lbs" or "kg"
-  goal        String?
 
-  user        User     @relation(fields: [userId], references: [id])
+model UserPreferences {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  weightUnit      String   @default("lbs")
+  defaultSets     Int      @default(3)
+  promptFrequency Int      @default(1)
+  preferredSplit  String?
+  enableWarmups   Boolean  @default(true)
+  enableCooldowns Boolean  @default(true)
+  remindersOn     Boolean  @default(false)
+  allowAISuggests Boolean  @default(false)
+
+  user            User     @relation(fields: [userId], references: [id])
 }
+
 
 model WeightLog {
   id        String   @id @default(uuid())
@@ -74,4 +83,30 @@ model Set {
   weight          Float
 
   exercise        WorkoutExercise @relation(fields: [workoutExerciseId], references: [id])
+}
+
+model ExerciseTag {
+  id        String   @id @default(uuid())
+  name      String   @unique
+
+  exercises Exercise[] @relation("TagOnExercise", references: [id])
+  excludedBy UserExcludedTag[]
+}
+
+
+model UserExcludedTag {
+  id     String   @id @default(uuid())
+  userId String
+  tagId  String
+
+  user   User        @relation(fields: [userId], references: [id])
+  tag    ExerciseTag @relation(fields: [tagId], references: [id])
+
+  @@unique([userId, tagId])
+}
+
+model Exercise {
+  id    String   @id @default(uuid())
+  name  String   @unique
+  tags  ExerciseTag[]
 }
