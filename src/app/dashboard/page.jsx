@@ -14,6 +14,10 @@ export default function DashboardPage() {
         <button onClick={() => router.push('/preferences')}>
           Go to Preferences
         </button>
+        <button onClick={() => router.push('/workout')}>
+  Start Workout
+</button>
+
 
         <LogoutButton />
       </div>
